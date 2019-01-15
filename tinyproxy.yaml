@@ -1,0 +1,48 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: tinyproxy
+  labels:
+    run: tinyproxy
+spec:
+  type: LoadBalancer
+  ports:
+  - port: 8888
+    targetPort: 8888
+    protocol: TCP
+    name: http
+  - port: 443
+    protocol: TCP
+    name: https
+  selector:
+    run: tinyproxy
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tinyproxy
+spec:
+  selector:
+    matchLabels:
+      run: tinyproxy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        run: tinyproxy
+    spec:
+      # volumes:
+      # - name: secret-volume
+      #   secret:
+      #     secretName: nginxsecret
+      containers:
+      - name: tinyproxy
+        image: eu.gcr.io/instagram-228713/tinyproxy
+        command: ["/entry.sh"]
+        args: ["-BasicAuth", "ntoss secret42"]
+        ports:
+        - containerPort: 8888
+        - containerPort: 443
+        # volumeMounts:
+        # - mountPath: /etc/nginx/ssl
+        #   name: secret-volume
